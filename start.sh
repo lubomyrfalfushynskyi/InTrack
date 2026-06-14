@@ -73,7 +73,7 @@ docker-compose ps
 # Check database health
 echo ""
 echo -e "${BLUE}Checking database health...${NC}"
-if docker exec asset-management-db pg_isready -U postgres > /dev/null 2>&1; then
+if docker exec intrack-db pg_isready -U postgres > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Database is ready${NC}"
 else
     echo -e "${YELLOW}⚠ Database not ready yet${NC}"

@@ -1,8 +1,12 @@
 # Changelog
 
-All notable changes to the Asset Management System will be documented in this file.
+All notable changes to InTrack (Inventory Tracker System) will be documented in this file.
 
 ## [1.1.0] - 2026-06-14 - WSL Edition
+
+### Changed
+- ✅ Project renamed to **InTrack** (Inventory Tracker)
+- ✅ Adapted for WSL2 (Ubuntu) development environment
 
 ### Changed
 

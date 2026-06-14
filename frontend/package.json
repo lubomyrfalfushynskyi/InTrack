@@ -1,7 +1,7 @@
 {
-  "name": "asset-management-frontend",
-  "version": "1.0.0",
-  "description": "Asset Management System Frontend",
+  "name": "intrack-frontend",
+  "version": "1.1.0",
+  "description": "InTrack - Inventory Tracker System Frontend",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -57,7 +57,7 @@ echo ""
 echo -e "${BLUE}Service Health:${NC}"
 
 # Database
-if docker exec asset-management-db pg_isready -U postgres &> /dev/null; then
+if docker exec intrack-db pg_isready -U postgres &> /dev/null; then
     echo -e "${GREEN}✓${NC} PostgreSQL: ${GREEN}Healthy${NC}"
 else
     echo -e "${RED}✗${NC} PostgreSQL: ${RED}Not ready${NC}"

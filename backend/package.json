@@ -1,7 +1,7 @@
 {
-  "name": "asset-management-backend",
-  "version": "1.0.0",
-  "description": "Asset Management System Backend",
+  "name": "intrack-backend",
+  "version": "1.1.0",
+  "description": "InTrack - Inventory Tracker System Backend",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
