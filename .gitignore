@@ -49,3 +49,14 @@ Thumbs.db
 
 # Offline packages
 offline-package/
+
+# WSL specific
+.wslconfig
+*.WSL
+
+# Coverage
+coverage/
+.nyc_output/
+
+# ESLint cache
+.eslintcache

@@ -1,69 +1,110 @@
-# 🏢 Asset Management System
+# 🏢 Asset Management System (WSL Edition)
 
 Система для обліку майна в організації з автоматизованим документообігом.
+
+**Версія:** 1.1.0 (WSL Edition)
+**Платформа:** Windows Subsystem for Linux 2 (WSL2) - Ubuntu 22.04 LTS
 
 ## 📋 Функціональні можливості
 
 - ✅ Повний облік майна (введення, передача, списання)
 - 🔄 Автоматичний розрахунок статусу та строку служби
 - 📝 Система актів (введення, передача, списання)
-- 👥 Рольовий доступ до даних (глобальний адмін, адмін підрозділу, редактор, переглядач)
-- 🌍 Ієрархічна навігація по локаціях (регіон → будівля → приміщення → поверх)
+- 👥 Рольовий доступ до даних (4 ролі)
+- 🌍 Ієрархічна навігація по локаціях
 - 📜 Автоматичний аудит всіх дій
 - 🔒 Підтримка офлайн роботи через Docker
 - 💾 Офлайн встановлення без доступу до інтернету
 
-## 🚀 Швидкий старт
+## 🖥️ Системні вимоги (WSL)
 
-### Спосіб 1: Швидкий запуск (скрипти)
+### Обов'язково:
+- **Windows 10/11** з WSL2 встановленим
+- **Ubuntu 22.04 LTS** (або інша версія в WSL2)
+- **Docker Desktop** для Windows з WSL2 інтеграцією
+- **Не менше 4GB RAM** для Docker
+- **20GB вільного диску**
 
-#### Вимоги:
-- Docker 20.10+
-- Docker Compose 2.0+
-- 2GB вільного диску
-
-#### Встановлення:
+### Перевірка WSL2:
 
 ```bash
-# Для Linux/Mac
-./start.sh
+# У Windows PowerShell (з правами адміністратора)
+wsl --list --verbose
 
-# Для Windows
-start.bat
+# Повинно показувати:
+# NAME      STATE    VERSION
+# Ubuntu    Running  2
 ```
 
-Система автоматично:
-1. Перевірить Docker
-2. Створить .env файл (якщо немає)
-3. Збілдить Docker образи
-4. Запустить всі сервіси
+## 🚀 Швидкий старт (WSL2)
 
-### Спосіб 2: Ручний запуск
+### Крок 1: Підготовка середовища
+
+#### У Windows (PowerShell Admin):
+
+```powershell
+# Перевірте статус WSL2
+wsl --status
+
+# Якщо WSL2 не встановлено, встановіть:
+wsl --install -d Ubuntu-22.04
+
+# Перезавантажте комп'ютер
+```
+
+#### У WSL2 (Ubuntu terminal):
 
 ```bash
-# Клонувати репозиторій
-git clone https://github.com/your-org/asset-management-system.git
-cd asset-management-system
+# Оновіть систему
+sudo apt update && sudo apt upgrade -y
 
-# Скопіювати .env файл
+# Встановіть необхідні інструменти
+sudo apt install -y git curl ca-certificates
+
+# Перевірте Docker (повинен бути доступний через WSL2 інтеграцію)
+docker --version
+docker-compose version
+```
+
+### Крок 2: Отримання проекту
+
+```bash
+# Клонувати репозиторій (або перейти в папку проекту)
+cd /mnt/c/Users/Admin/Desktop/Yarik_Project/asset-management-system
+
+# Або якщо клонуєте з GitHub:
+# git clone https://github.com/your-org/asset-management-system.git
+# cd asset-management-system
+```
+
+### Крок 3: Налаштування
+
+```bash
+# Скопіювати та відредагувати .env файл
 cp .env.example .env
 
-# Редагувати .env та змінити JWT_SECRET!
-# nano .env  # або vim .env
-
-# Запустити систему
-docker-compose up -d
-
-# Перевірити статус
-docker-compose ps
+# Змінити JWT_SECRET на безпечний
+nano .env  # або використовуйте vim
 ```
 
-Сервіси будуть доступні за адресами:
+### Крок 4: Запуск системи
+
+```bash
+# Зробіть скрипти виконуваними
+chmod +x start.sh stop.sh create-offline-package.sh
+
+# Запустіть систему
+./start.sh
+```
+
+### Крок 5: Доступ до системи
+
+Відкрийте у браузері:
 - 🌐 Frontend: http://localhost:3000
 - 🔧 Backend API: http://localhost:5000
 - ❤️ Health Check: http://localhost:5000/health
 
-#### Облікові дані за замовчуванням:
+### Облікові дані за замовчуванням:
 
 ```
 Username: admin
@@ -72,102 +113,26 @@ Password: admin123
 
 ⚠️ **ВАЖЛИВО**: Змініть пароль адміністратора після першого входу!
 
-### Управління сервісами
-
-#### Скрипти:
-
-```bash
-# Linux/Mac
-./start.sh    # Запуск
-./stop.sh     # Зупинка
-
-# Windows
-start.bat     # Запуск
-stop.bat      # Зупинка
-```
-
-#### Docker Compose:
-
-```bash
-# Запустити всі сервіси
-docker-compose up -d
-
-# Зупинити всі сервіси
-docker-compose down
-
-# Перезапустити сервіси
-docker-compose restart
-
-# Переглянути логи
-docker-compose logs -f
-
-# Переглянути логи конкретного сервісу
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f postgres
-```
-
-### Офлайн встановлення (без інтернету)
-
-#### Встановлення на машині з інтернетом:
-
-```bash
-# Створити офлайн пакет
-./create-offline-package.sh
-
-# Пакет буде створено в ./offline-package/
-```
-
-#### Перенесення на офлайн машину:
-
-1. Скопіюйте папку `offline-package` на USB флешку
-2. Перенесіть на цільову машину
-3. Запустіть установку:
-
-```bash
-cd offline-package
-./install.sh
-```
-
 ## 📁 Структура проекту
 
 ```
 asset-management-system/
 ├── backend/                    # Backend API (Node.js + Express)
-│   ├── src/
-│   │   ├── config/            # Конфігурація
-│   │   ├── controllers/       # Контролери
-│   │   ├── middleware/         # Middleware (auth, audit)
-│   │   ├── routes/            # API routes
-│   │   ├── services/          # Сервіси (db, logger)
-│   │   └── server.js          # Головний файл сервера
-│   ├── Dockerfile
-│   └── package.json
-│
 ├── frontend/                   # Frontend (React + Ant Design)
-│   ├── src/
-│   │   ├── components/        # React компоненти
-│   │   ├── pages/             # Сторінки додатку
-│   │   ├── services/          # API клієнти
-│   │   ├── store/             # State management (Zustand)
-│   │   └── App.jsx            # Головний компонент
-│   ├── Dockerfile
-│   └── package.json
-│
-├── database/                   # База даних
-│   └── init/
-│       └── schema.sql         # SQL схема
-│
+├── database/                   # PostgreSQL schema
 ├── docker-compose.yml          # Docker Compose конфігурація
-├── docker-compose.offline.yml  # Офлайн конфігурація
-├── create-offline-package.sh   # Скрипт створення офлайн пакету
-└── README.md
+├── start.sh                   # Скрипт запуску
+├── stop.sh                    # Скрипт зупинки
+├── create-offline-package.sh  # Офлайн інсталятор
+├── .wslconfig                 # WSL конфігурація
+├── .env.example               # Template для .env
+└── README.md                  # Цей файл
 ```
 
 ## 🔧 Технологічний стек
 
 ### Backend:
-- **Runtime**: Node.js 18+
+- **Runtime**: Node.js 18+ (Alpine Linux)
 - **Framework**: Express.js
 - **Database**: PostgreSQL 15
 - **Authentication**: JWT + bcrypt
@@ -183,8 +148,8 @@ asset-management-system/
 
 ### Infrastructure:
 - **Containerization**: Docker + Docker Compose
-- **Reverse Proxy**: Nginx (опціонально)
-- **TLS**: Let's Encrypt або self-signed certs
+- **Reverse Proxy**: Nginx
+- **Platform**: WSL2 (Ubuntu 22.04 LTS)
 
 ## 👥 Ролі та доступи
 
@@ -192,27 +157,23 @@ asset-management-system/
 - Повний доступ до всієї системи
 - Управління користувачами та підрозділами
 - Доступ до всіх логів
-- Налаштування системи
 
 ### Department Admin (Адмін підрозділу)
 - Повний доступ в межах свого підрозділу
 - Управління користувачами підрозділу
-- Доступ до логів підрозділу
 
 ### Editor (Редактор)
 - Створення та редагування актів
 - Редагування майна в своєму підрозділі
-- Без доступу до логів
 
 ### Viewer (Переглядач)
 - Тільки перегляд даних
-- Без права редагування
 
 ## 📝 API Ендпоінти
 
 ### Authentication
 - `POST /api/auth/login` - Вхід в систему
-- `GET /api/auth/me` - Отримати інформацію про поточного користувача
+- `GET /api/auth/me` - Отримати інформацію про користувача
 - `POST /api/auth/change-password` - Змінити пароль
 
 ### Assets
@@ -228,47 +189,29 @@ asset-management-system/
 - `POST /api/acts/transfer` - Акт передачі
 - `POST /api/acts/write-off` - Акт списання
 
-### Users
-- `GET /api/users` - Отримати список користувачів
-- `POST /api/users` - Створити користувача
-- `PUT /api/users/:id` - Оновити користувача
-- `DELETE /api/users/:id` - Видалити користувача
-
-## 🔧 Налаштування
-
-### Environment Variables
+## 🐳 Docker Commands
 
 ```bash
-# Server
-NODE_ENV=production
-PORT=5000
+# Запуск всіх сервісів
+docker-compose up -d
 
-# Database
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=asset_management
-DB_USER=postgres
-DB_PASSWORD=your-secure-password
+# Зупинка всіх сервісів
+docker-compose down
 
-# JWT
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=24h
+# Перегляд логів
+docker-compose logs -f
 
-# Logging
-LOG_LEVEL=info
+# Перегляд логів конкретного сервісу
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f postgres
 
-# Frontend URL (for CORS)
-FRONTEND_URL=http://localhost:3000
+# Рестарт сервісів
+docker-compose restart
+
+# Перевірка статусу
+docker-compose ps
 ```
-
-## 🔒 Безпека
-
-- JWT токени для аутентифікації
-- Bcrypt для хешування паролів
-- Rate limiting для API
-- CORS для захисту від CSRF
-- Audit logging для всіх CRUD операцій
-- Role-based access control
 
 ## 📦 Backup та Restore
 
@@ -284,38 +227,81 @@ docker run --rm -v asset_management_postgres_data:/data -v $(pwd):/backup \
   alpine tar czf /backup/postgres-backup.tar.gz -C /data .
 ```
 
+## 🔧 WSL2 Оптимізація
+
+### Створіть файл `.wslconfig` у Windows (`C:\Users\<YourUser>\.wslconfig`):
+
+```ini
+[wsl2]
+memory=8GB
+processors=4
+swap=2GB
+localhostForwarding=true
+```
+
+### Додайте `/etc/wsl.conf` в Ubuntu:
+
+```bash
+sudo bash -c 'cat > /etc/wsl.conf << EOF
+[network]
+generateHosts = false
+generateResolvConf = false
+
+[boot]
+systemd = true
+EOF'
+```
+
+### Перезапустіть WSL з Windows PowerShell:
+
+```powershell
+wsl --shutdown
+```
+
 ## 🐛 Troubleshooting
 
-### Сервіси не запускаються
+### Docker не працює в WSL2
 
 ```bash
-# Перевірити логи
-docker-compose logs
+# Перевірте Docker Desktop
+# Settings > General > Use the WSL 2 based engine
 
-# Перевірити статус контейнерів
-docker-compose ps
-
-# Перезапустити сервіси
-docker-compose restart
+# Перевірте, що Docker доступний
+docker --version
+docker ps
 ```
 
-### Проблеми з базою даних
+### Проблеми з портами
 
 ```bash
-# Перевірити з'єднання з базою
-docker exec asset-management-db psql -U postgres -d asset_management
+# Перевірте зайняті порти
+sudo netstat -tuln | grep -E ':(3000|5000|5432)'
 
-# Переглянути логи бази даних
-docker logs asset-management-db
+# Звільніть порт, якщо потрібно
+sudo kill <PID>
 ```
 
-### Проблеми з портом
+### Проблеми з файлами
 
 ```bash
-# Перевірити зайняті порти
-netstat -tuln | grep -E ':(3000|5000|5432)'
+# Переконайтеся, що скрипти виконувані
+chmod +x *.sh
 
-# Змінити порти в docker-compose.yml
+# Перевірте права доступу
+ls -la *.sh
+```
+
+### Перевірка здоров'я сервісів
+
+```bash
+# Health check
+curl http://localhost:5000/health
+
+# Перевірка бази даних
+docker exec asset-management-db pg_isready -U postgres
+
+# Перегляд логів
+docker-compose logs --tail=50 backend
 ```
 
 ## 📄 License
@@ -324,11 +310,7 @@ MIT License - дивіться файл LICENSE для деталей.
 
 ## 🤝 Contributing
 
-1. Fork проекту
-2. Створіть feature branch
-3. Commit ваші зміни
-4. Push в branch
-5. Створіть Pull Request
+Дивіться [CONTRIBUTING.md](CONTRIBUTING.md) для деталей.
 
 ## 📞 Support
 
@@ -338,5 +320,6 @@ MIT License - дивіться файл LICENSE для деталей.
 
 ---
 
-**Версія**: 1.0.0
-**Дата останнього оновлення**: 2026
+**Версія:** 1.1.0 (WSL Edition)
+**Дата останнього оновлення:** 2026-06-14
+**Платформа:** WSL2 (Ubuntu 22.04 LTS)

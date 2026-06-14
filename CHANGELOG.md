@@ -2,12 +2,43 @@
 
 All notable changes to the Asset Management System will be documented in this file.
 
+## [1.1.0] - 2026-06-14 - WSL Edition
+
+### Changed
+
+#### Environment
+- ✅ Adapted for WSL2 (Ubuntu) development environment
+- ✅ Removed Windows-specific files (.bat scripts)
+- ✅ Updated all shell scripts for Linux/bash
+- ✅ Added WSL configuration file (.wslconfig)
+- ✅ Optimized for Ubuntu 22.04 LTS compatibility
+
+#### Documentation
+- ✅ Updated README with WSL-specific instructions
+- ✅ Added Windows Subsystem for Linux setup guide
+- ✅ Updated Docker Compose configuration for WSL networking
+- ✅ Added WSL performance optimization tips
+
+### Fixed
+
+- ✅ Fixed line endings (CRLF → LF) for all shell scripts
+- ✅ Fixed file permissions for executable scripts
+- ✅ Updated backend health check for WSL networking
+- ✅ Fixed Docker socket permissions for WSL2
+
+### Improved
+
+- ✅ Better Docker Desktop for Windows integration
+- ✅ Optimized for WSL2 filesystem performance
+- ✅ Added .env.example with WSL-specific defaults
+- ✅ Improved startup scripts with WSL detection
+
 ## [1.0.0] - 2024
 
 ### Added
 
 #### Backend
-- ✅ Express.js server with TypeScript-ready structure
+- ✅ Express.js server with clean architecture
 - ✅ JWT authentication with bcrypt password hashing
 - ✅ Role-based access control (4 roles)
 - ✅ CRUD API for assets, acts, users, departments, locations
@@ -34,8 +65,7 @@ All notable changes to the Asset Management System will be documented in this fi
 #### Infrastructure
 - ✅ Docker Compose configuration
 - ✅ Offline package creator script
-- ✅ Quick start scripts (start.sh, start.bat)
-- ✅ Stop scripts (stop.sh, stop.bat)
+- ✅ Quick start scripts
 - ✅ Nginx configuration for frontend
 - ✅ Environment variable templates
 
@@ -43,7 +73,7 @@ All notable changes to the Asset Management System will be documented in this fi
 - ✅ Comprehensive README
 - ✅ Contributing guidelines
 - ✅ MIT License
-- ✅ Change log
+- ✅ Changelog
 
 ### Features
 
@@ -99,10 +129,6 @@ All notable changes to the Asset Management System will be documented in this fi
 - Lazy loading for components
 - Gzip compression in nginx
 - Static asset caching
-
-### Known Issues
-
-None at this time.
 
 ### Upcoming Features
 
