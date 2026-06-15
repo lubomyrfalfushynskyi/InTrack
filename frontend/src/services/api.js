@@ -1,110 +1,92 @@
 import axios from 'axios';
 
-// Get API URL from environment or use default
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Відносний '/api' → ходить через nginx-проксі (працює на будь-якому хості/IP)
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
-// Create axios instance
 const api = axios.create({
   baseURL: `${API_URL}/api`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+}, (error) => Promise.reject(error));
 
-// Response interceptor to handle errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+api.interceptors.response.use((response) => response, (error) => {
+  if (error.response && error.response.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    if (window.location.pathname !== '/login') window.location.href = '/login';
   }
-);
+  return Promise.reject(error);
+});
 
-// Auth API
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
+  login: (c) => api.post('/auth/login', c),
   getMe: () => api.get('/auth/me'),
-  changePassword: (data) => api.post('/auth/change-password', data),
+  changePassword: (d) => api.post('/auth/change-password', d),
 };
 
-// Assets API
 export const assetsAPI = {
-  getAll: (params) => api.get('/assets', { params }),
+  getAll: (p) => api.get('/assets', { params: p }),
   getById: (id) => api.get(`/assets/${id}`),
-  create: (data) => api.post('/assets', data),
-  update: (id, data) => api.put(`/assets/${id}`, data),
-  delete: (id) => api.delete(`/assets/${id}`),
+  update: (id, d) => api.put(`/assets/${id}`, d),
+  remove: (id) => api.delete(`/assets/${id}`),
 };
 
-// Acts API
+export const usageAPI = {
+  list: (assetId) => api.get(`/assets/${assetId}/usage`),
+  add: (assetId, d) => api.post(`/assets/${assetId}/usage`, d),
+  remove: (assetId, usageId) => api.delete(`/assets/${assetId}/usage/${usageId}`),
+};
+
 export const actsAPI = {
-  getAll: (params) => api.get('/acts', { params }),
+  getAll: (p) => api.get('/acts', { params: p }),
   getById: (id) => api.get(`/acts/${id}`),
-  createIntroduction: (data) => api.post('/acts/introduction', data),
-  createTransfer: (data) => api.post('/acts/transfer', data),
-  createWriteOff: (data) => api.post('/acts/write-off', data),
-  delete: (id) => api.delete(`/acts/${id}`),
+  introduction: (d) => api.post('/acts/introduction', d),
+  transfer: (d) => api.post('/acts/transfer', d),
+  extension: (d) => api.post('/acts/extension', d),
+  writeOff: (d) => api.post('/acts/write-off', d),
+  remove: (id) => api.delete(`/acts/${id}`),
 };
 
-// Users API
+export const assetTypesAPI = {
+  getAll: () => api.get('/asset-types'),
+  create: (d) => api.post('/asset-types', d),
+  update: (id, d) => api.put(`/asset-types/${id}`, d),
+  remove: (id) => api.delete(`/asset-types/${id}`),
+};
+
+export const departmentsAPI = {
+  getAll: () => api.get('/departments'),
+  create: (d) => api.post('/departments', d),
+  update: (id, d) => api.put(`/departments/${id}`, d),
+  remove: (id) => api.delete(`/departments/${id}`),
+};
+
+export const locationsAPI = {
+  getAll: () => api.get('/locations'),
+  create: (d) => api.post('/locations', d),
+  update: (id, d) => api.put(`/locations/${id}`, d),
+  remove: (id) => api.delete(`/locations/${id}`),
+  assets: (id) => api.get(`/locations/${id}/assets`),
+};
+
 export const usersAPI = {
-  getAll: (params) => api.get('/users', { params }),
+  getAll: (p) => api.get('/users', { params: p }),
   getById: (id) => api.get(`/users/${id}`),
-  create: (data) => api.post('/users', data),
-  update: (id, data) => api.put(`/users/${id}`, data),
-  delete: (id) => api.delete(`/users/${id}`),
+  create: (d) => api.post('/users', d),
+  update: (id, d) => api.put(`/users/${id}`, d),
+  remove: (id) => api.delete(`/users/${id}`),
   toggleActive: (id) => api.patch(`/users/${id}/toggle-active`),
 };
 
-// Departments API
-export const departmentsAPI = {
-  getAll: (params) => api.get('/departments', { params }),
-  getById: (id) => api.get(`/departments/${id}`),
-  create: (data) => api.post('/departments', data),
-  update: (id, data) => api.put(`/departments/${id}`, data),
-  delete: (id) => api.delete(`/departments/${id}`),
-};
-
-// Locations API
-export const locationsAPI = {
-  getAll: (params) => api.get('/locations', { params }),
-  getById: (id) => api.get(`/locations/${id}`),
-  create: (data) => api.post('/locations', data),
-  update: (id, data) => api.put(`/locations/${id}`, data),
-  delete: (id) => api.delete(`/locations/${id}`),
-  getRegions: () => api.get('/locations/regions/unique'),
-  getBuildings: (region) => api.get('/locations/buildings/by-region', { params: { region } }),
-  getTree: () => api.get('/locations/tree'),
-};
-
-// Logs API
 export const logsAPI = {
-  getAll: (params) => api.get('/logs', { params }),
-  getById: (id) => api.get(`/logs/${id}`),
-  getStats: (params) => api.get('/logs/stats/summary', { params }),
-  exportCSV: (params) => api.get('/logs/export/csv', { params, responseType: 'blob' }),
+  getAll: (p) => api.get('/logs', { params: p }),
 };
 
-// Health check
 export const healthCheck = () => axios.get(`${API_URL}/health`);
 
 export default api;

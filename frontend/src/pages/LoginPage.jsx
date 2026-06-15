@@ -99,7 +99,7 @@ const LoginPage = () => {
           <div style={{ textAlign: 'center' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
               Облікові дані за замовчуванням:<br />
-              Логін: <Text strong>admin</Text> | Пароль: <Text strong>admin123</Text>
+              Логін: <Text strong>admin</Text> | Пароль: <Text strong>admin</Text>
             </Text>
           </div>
         </Space>

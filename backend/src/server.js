@@ -10,6 +10,8 @@ const db = require('./services/database');
 // Import routes
 const authRoutes = require('./routes/auth');
 const assetRoutes = require('./routes/assets');
+const usageRoutes = require('./routes/usage');
+const assetTypeRoutes = require('./routes/assetTypes');
 const actRoutes = require('./routes/acts');
 const userRoutes = require('./routes/users');
 const locationRoutes = require('./routes/locations');
@@ -53,23 +55,24 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get('/health', (req, res) => {
-  db.query('SELECT NOW()', (err, result) => {
-    if (err) {
-      res.status(500).json({ status: 'error', message: 'Database connection failed' });
-    } else {
-      res.json({
-        status: 'ok',
-        timestamp: result.rows[0].now,
-        version: require('../package.json').version
-      });
-    }
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const result = await db.query('SELECT NOW()');
+    res.json({
+      status: 'ok',
+      timestamp: result.rows[0].now,
+      version: require('../package.json').version
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Database connection failed' });
+  }
 });
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/assets/:assetId/usage', usageRoutes);
+app.use('/api/asset-types', assetTypeRoutes);
 app.use('/api/acts', actRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/locations', locationRoutes);

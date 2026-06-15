@@ -16,6 +16,7 @@ import ActsPage from './pages/ActsPage';
 import UsersPage from './pages/UsersPage';
 import LocationsPage from './pages/LocationsPage';
 import LogsPage from './pages/LogsPage';
+import AssetTypesPage from './pages/AssetTypesPage';
 import ProfilePage from './pages/ProfilePage';
 
 // Store
@@ -55,6 +56,7 @@ function App() {
             <Route path="/assets" element={<AssetsPage />} />
             <Route path="/assets/:id" element={<AssetDetailPage />} />
             <Route path="/acts" element={<ActsPage />} />
+            <Route path="/asset-types" element={<AssetTypesPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/locations" element={<LocationsPage />} />
             <Route path="/logs" element={<LogsPage />} />

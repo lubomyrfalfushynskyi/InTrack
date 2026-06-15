@@ -181,3 +181,18 @@ code {
     flex-direction: column;
   }
 }
+
+/* Підсвітка рядків таблиці майна (ТЗ §4: прострочене — іншим кольором) */
+.ant-table-row.row-expired > td {
+  background: #fff1f0 !important;
+}
+.ant-table-row.row-expired:hover > td {
+  background: #ffccc7 !important;
+}
+.ant-table-row.row-written-off > td {
+  background: #fafafa !important;
+  color: #8c8c8c;
+}
+.ant-table-row.row-transferred > td {
+  background: #fff7e6 !important;
+}

@@ -4,6 +4,7 @@ import {
   DashboardOutlined,
   InboxOutlined,
   FileTextOutlined,
+  AppstoreOutlined,
   TeamOutlined,
   EnvironmentOutlined,
   HistoryOutlined,
@@ -31,44 +32,13 @@ const Layout = () => {
   };
 
   const menuItems = [
-    {
-      key: '/',
-      icon: <DashboardOutlined />,
-      label: 'Дашборд',
-      onClick: () => navigate('/'),
-    },
-    {
-      key: '/assets',
-      icon: <InboxOutlined />,
-      label: 'Майно',
-      onClick: () => navigate('/assets'),
-    },
-    {
-      key: '/acts',
-      icon: <FileTextOutlined />,
-      label: 'Акти',
-      onClick: () => navigate('/acts'),
-    },
-    {
-      key: '/users',
-      icon: <TeamOutlined />,
-      label: 'Користувачі',
-      onClick: () => navigate('/users'),
-      visible: ['global_admin', 'department_admin'].includes(user?.role),
-    },
-    {
-      key: '/locations',
-      icon: <EnvironmentOutlined />,
-      label: 'Локації',
-      onClick: () => navigate('/locations'),
-    },
-    {
-      key: '/logs',
-      icon: <HistoryOutlined />,
-      label: 'Логи',
-      onClick: () => navigate('/logs'),
-      visible: ['global_admin', 'department_admin'].includes(user?.role),
-    },
+    { key: '/', icon: <DashboardOutlined />, label: 'Дашборд', onClick: () => navigate('/') },
+    { key: '/assets', icon: <InboxOutlined />, label: 'Майно', onClick: () => navigate('/assets') },
+    { key: '/acts', icon: <FileTextOutlined />, label: 'Акти', onClick: () => navigate('/acts') },
+    { key: '/asset-types', icon: <AppstoreOutlined />, label: 'Види майна', onClick: () => navigate('/asset-types'), visible: user?.role === 'global_admin' },
+    { key: '/locations', icon: <EnvironmentOutlined />, label: 'Приміщення', onClick: () => navigate('/locations') },
+    { key: '/users', icon: <TeamOutlined />, label: 'Користувачі', onClick: () => navigate('/users'), visible: ['global_admin', 'department_admin'].includes(user?.role) },
+    { key: '/logs', icon: <HistoryOutlined />, label: 'Журнал', onClick: () => navigate('/logs'), visible: ['global_admin', 'global_supervisor', 'department_admin'].includes(user?.role) },
   ].filter((item) => item.visible !== false);
 
   const userMenuItems = [
@@ -132,6 +102,7 @@ const Layout = () => {
         </div>
         <div style={{ fontSize: 11, color: '#bfbfbf' }}>
           {user?.role === 'global_admin' && 'Глобальний адмін'}
+          {user?.role === 'global_supervisor' && 'Супервізор'}
           {user?.role === 'department_admin' && 'Адмін підрозділу'}
           {user?.role === 'editor' && 'Редактор'}
           {user?.role === 'viewer' && 'Переглядач'}

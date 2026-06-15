@@ -1,184 +1,109 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Statistic, Typography, Space, Table, Tag, DatePicker, Spin } from 'antd';
-import {
-  InboxOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+import { Row, Col, Card, Statistic, Typography, Space, Table, Checkbox, Dropdown, Button, Spin } from 'antd';
+import { InboxOutlined, CheckCircleOutlined, WarningOutlined, StopOutlined, FileTextOutlined, TeamOutlined, SettingOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { assetsAPI, actsAPI, usersAPI } from '../services/api';
+import InfoButton from '../components/InfoButton';
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
+
+const ALL_WIDGETS = [
+  { key: 'total', label: 'Всього майна' },
+  { key: 'active', label: 'Придатне' },
+  { key: 'expired', label: 'Прострочене' },
+  { key: 'transferred', label: 'Передане' },
+  { key: 'written_off', label: 'Списане' },
+  { key: 'acts', label: 'Актів' },
+  { key: 'users', label: 'Користувачів' },
+  { key: 'expiredList', label: 'Список: кому продовжити' },
+];
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState({
-    totalAssets: 0,
-    activeAssets: 0,
-    transferredAssets: 0,
-    writtenOffAssets: 0,
-    totalActs: 0,
-    totalUsers: 0,
-  });
-  const [recentActs, setRecentActs] = useState([]);
+  const [stats, setStats] = useState({ total: 0, active: 0, expired: 0, transferred: 0, written_off: 0, acts: 0, users: 0 });
+  const [expired, setExpired] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [widgets, setWidgets] = useState(() => {
+    try { const s = JSON.parse(localStorage.getItem('dash_widgets') || 'null'); if (s) return s; } catch (e) {}
+    return ALL_WIDGETS.map((w) => w.key);
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchDashboardData();
+    (async () => {
+      try {
+        const [all, active, expiredR, transferredR, off, actsR, usersR] = await Promise.all([
+          assetsAPI.getAll({ limit: 1 }),
+          assetsAPI.getAll({ limit: 1, status: 'active' }),
+          assetsAPI.getAll({ limit: 50, status: 'expired' }),
+          assetsAPI.getAll({ limit: 1, status: 'transferred' }),
+          assetsAPI.getAll({ limit: 1, status: 'written_off' }),
+          actsAPI.getAll({ limit: 1 }),
+          usersAPI.getAll({ limit: 1 }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        ]);
+        setStats({
+          total: all.data.pagination.total, active: active.data.pagination.total, expired: expiredR.data.pagination.total,
+          transferred: transferredR.data.pagination.total, written_off: off.data.pagination.total,
+          acts: actsR.data.pagination.total, users: usersR.data.pagination.total,
+        });
+        setExpired(expiredR.data.data);
+      } catch (e) { /* scoped */ } finally { setLoading(false); }
+    })();
   }, []);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-
-      // Fetch stats
-      const [assetsRes, actsRes, usersRes] = await Promise.all([
-        axios.get('/api/assets?limit=1', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get('/api/acts?limit=5', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get('/api/users?limit=1', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      setStats({
-        totalAssets: assetsRes.data.pagination.total,
-        activeAssets: 0, // Would need backend endpoint for this
-        transferredAssets: 0,
-        writtenOffAssets: 0,
-        totalActs: actsRes.data.pagination.total,
-        totalUsers: usersRes.data.pagination.total,
-      });
-
-      setRecentActs(actsRes.data.data);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
+  const toggleWidget = (k) => {
+    setWidgets((prev) => {
+      const next = prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k];
+      localStorage.setItem('dash_widgets', JSON.stringify(next));
+      return next;
+    });
   };
 
-  const actsColumns = [
-    {
-      title: 'Номер',
-      dataIndex: 'act_number',
-      key: 'act_number',
-      render: (text, record) => (
-        <a onClick={() => navigate(`/acts?type=${record.act_type}`)}>{text}</a>
-      ),
-    },
-    {
-      title: 'Тип',
-      dataIndex: 'act_type',
-      key: 'act_type',
-      render: (type) => {
-        const colors = {
-          introduction: 'green',
-          transfer: 'blue',
-          write_off: 'red',
-        };
-        const labels = {
-          introduction: 'Введення',
-          transfer: 'Передача',
-          write_off: 'Списання',
-        };
-        return <Tag color={colors[type]}>{labels[type]}</Tag>;
-      },
-    },
-    {
-      title: 'Дата',
-      dataIndex: 'act_date',
-      key: 'act_date',
-      render: (date) => new Date(date).toLocaleDateString('uk-UA'),
-    },
-    {
-      title: 'Майно',
-      dataIndex: 'asset_description',
-      key: 'asset_description',
-      ellipsis: true,
-    },
+  const cards = [
+    { key: 'total', title: 'Всього майна', value: stats.total, icon: <InboxOutlined />, color: '#1890ff' },
+    { key: 'active', title: 'Придатне', value: stats.active, icon: <CheckCircleOutlined />, color: '#52c41a' },
+    { key: 'expired', title: 'Прострочене', value: stats.expired, icon: <WarningOutlined />, color: '#cf1322' },
+    { key: 'transferred', title: 'Передане', value: stats.transferred, icon: <ArrowRightOutlined />, color: '#fa8c16' },
+    { key: 'written_off', title: 'Списане', value: stats.written_off, icon: <StopOutlined />, color: '#8c8c8c' },
+    { key: 'acts', title: 'Актів', value: stats.acts, icon: <FileTextOutlined />, color: '#13c2c2' },
+    { key: 'users', title: 'Користувачів', value: stats.users, icon: <TeamOutlined />, color: '#722ed1' },
   ];
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="Завантаження..." />
-      </div>
-    );
-  }
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><Spin size="large" /></div>;
 
   return (
     <div>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* Header */}
-        <div>
-          <Title level={2}>Дашборд</Title>
-          <Text type="secondary">Огляд системи обліку майна</Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div><Title level={2} style={{ margin: 0 }}>Дашборд</Title><Text type="secondary">Огляд стану майна</Text></div>
+          <Space>
+            <Dropdown trigger={['click']} menu={{ items: ALL_WIDGETS.map((w) => ({ key: w.key, label: <Checkbox checked={widgets.includes(w.key)} onChange={() => toggleWidget(w.key)}>{w.label}</Checkbox> })) }}>
+              <Button icon={<SettingOutlined />}>Віджети</Button>
+            </Dropdown>
+            <InfoButton title="Дашборд" items={[
+              { title: 'Налаштування', text: 'Натисніть «Віджети» й позначте, які картки/списки показувати. Вибір зберігається для вас.' },
+              { title: 'Кому продовжити', text: 'Список простроченого майна (залишковий строк < 0). Відкрийте картку й внесіть акт продовження.' },
+            ]} />
+          </Space>
         </div>
 
-        {/* Statistics Cards */}
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Всього майна"
-                value={stats.totalAssets}
-                prefix={<InboxOutlined />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Активних"
-                value={stats.activeAssets}
-                prefix={<CheckCircleOutlined />}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Всього актів"
-                value={stats.totalActs}
-                prefix={<FileTextOutlined />}
-                valueStyle={{ color: '#fa8c16' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Користувачів"
-                value={stats.totalUsers}
-                prefix={<TeamOutlined />}
-                valueStyle={{ color: '#722ed1' }}
-              />
-            </Card>
-          </Col>
+          {cards.filter((c) => widgets.includes(c.key)).map((c) => (
+            <Col key={c.key} xs={12} md={6}><Card><Statistic title={c.title} value={c.value} prefix={c.icon} valueStyle={{ color: c.color }} /></Card></Col>
+          ))}
         </Row>
 
-        {/* Recent Acts */}
-        <Card
-          title="Останні акти"
-          extra={<a onClick={() => navigate('/acts')}>Переглянути всі</a>}
-        >
-          <Table
-            columns={actsColumns}
-            dataSource={recentActs}
-            rowKey="act_id"
-            pagination={false}
-            size="small"
-          />
-        </Card>
+        {widgets.includes('expiredList') && (
+          <Card title="Пора продовжити експлуатацію (прострочені)" extra={<a onClick={() => navigate('/assets')}>Усі</a>}>
+            <Table size="small" rowKey="asset_id" pagination={false} dataSource={expired.slice(0, 10)}
+              columns={[
+                { title: 'Інв. номер', dataIndex: 'inventory_number', render: (t, r) => <a onClick={() => navigate(`/assets/${r.asset_id}`)}>{t}</a> },
+                { title: 'Найменування', dataIndex: 'name' },
+                { title: 'Підрозділ', dataIndex: 'department_name' },
+                { title: 'Залишк. строк', dataIndex: 'remaining_life_years', render: (v) => <span style={{ color: '#cf1322', fontWeight: 600 }}>{v} р.</span> },
+              ]}
+              locale={{ emptyText: 'Прострочених немає' }} />
+          </Card>
+        )}
       </Space>
     </div>
   );

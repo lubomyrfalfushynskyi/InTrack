@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const { verifyPassword, hashPassword } = require('../services/password');
 const jwt = require('jsonwebtoken');
 const db = require('../services/database');
 const { authenticate, authorize } = require('../middleware/auth');
@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Verify password
-    const validPassword = await bcrypt.compare(password, user.password_hash);
+    const validPassword = await verifyPassword(password, user.password_hash);
     if (!validPassword) {
       logger.warn('Login attempt with invalid password', { username });
       return res.status(401).json({ message: 'Невірний логін або пароль' });
@@ -115,13 +115,13 @@ router.post('/change-password', authenticate, async (req, res) => {
     const user = result.rows[0];
 
     // Verify current password
-    const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
+    const validPassword = await verifyPassword(currentPassword, user.password_hash);
     if (!validPassword) {
       return res.status(401).json({ message: 'Невірний поточний пароль' });
     }
 
     // Hash new password
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    const newPasswordHash = await hashPassword(newPassword);
 
     // Update password
     await db.query(
