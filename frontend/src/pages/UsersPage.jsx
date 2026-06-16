@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Card, Space, Button, Tag, Select, Typography, Modal, Form, Input, Popconfirm, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, Card, Space, Button, Tag, Select, Typography, Modal, Form, Input, message } from 'antd';
+import { PlusOutlined, EditOutlined, ReloadOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { usersAPI, departmentsAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 
@@ -46,7 +46,7 @@ const UsersPage = () => {
       message.success('Збережено'); setOpen(false); load();
     } catch (e) { message.error(e.response?.data?.message || 'Помилка'); } finally { setSubmitting(false); }
   };
-  const remove = async (u) => { try { await usersAPI.remove(u.user_id); message.success('Видалено'); load(); } catch (e) { message.error(e.response?.data?.message || 'Помилка'); } };
+  const toggle = async (u) => { try { await usersAPI.toggleActive(u.user_id); message.success(u.is_active ? 'Заблоковано' : 'Розблоковано'); load(); } catch (e) { message.error(e.response?.data?.message || 'Не вдалося'); } };
 
   const columns = [
     { title: 'Логін', dataIndex: 'username', key: 'username' },
@@ -54,9 +54,9 @@ const UsersPage = () => {
     { title: 'Роль', dataIndex: 'role', key: 'role', width: 180, render: (r) => { const x = roleMap[r]; return <Tag color={x && x.color}>{(x && x.label) || r}</Tag>; } },
     { title: 'Підрозділ', dataIndex: 'department_name', key: 'department_name' },
     { title: 'Статус', dataIndex: 'is_active', key: 'is_active', width: 110, render: (a) => <Tag color={a ? 'green' : 'red'}>{a ? 'Активний' : 'Вимкн.'}</Tag> },
-    { title: '', key: 'act', width: 90, render: (_, r) => (<Space>
+    { title: '', key: 'act', width: 100, render: (_, r) => (<Space>
       <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-      {isGlobal && <Popconfirm title="Видалити користувача?" onConfirm={() => remove(r)} okText="Так" cancelText="Ні"><Button type="text" danger icon={<DeleteOutlined />} /></Popconfirm>}
+      <Button type="text" danger={r.is_active} icon={r.is_active ? <LockOutlined /> : <UnlockOutlined />} onClick={() => toggle(r)} title={r.is_active ? 'Заблокувати' : 'Розблокувати'} />
     </Space>) },
   ];
 

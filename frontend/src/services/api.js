@@ -66,6 +66,14 @@ export const departmentsAPI = {
   remove: (id) => api.delete(`/departments/${id}`),
 };
 
+export const regionsAPI = {
+  getAll: () => api.get('/regions'),
+  getById: (id) => api.get(`/regions/${id}`),
+  create: (d) => api.post('/regions', d),
+  update: (id, d) => api.put(`/regions/${id}`, d),
+  remove: (id) => api.delete(`/regions/${id}`),
+};
+
 export const locationsAPI = {
   getAll: () => api.get('/locations'),
   create: (d) => api.post('/locations', d),

@@ -18,11 +18,23 @@ CREATE TABLE IF NOT EXISTS asset_types (
 );
 
 -- ============================================
--- DEPARTMENTS — підрозділи (≈ область/місто)
+-- REGIONS — області (єдине джерело істини для областей)
+-- ============================================
+CREATE TABLE IF NOT EXISTS regions (
+    region_id SERIAL PRIMARY KEY,
+    region_name VARCHAR(255) UNIQUE NOT NULL,
+    display_order INTEGER DEFAULT 999,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- DEPARTMENTS — підрозділи (прив'язані до областей)
 -- ============================================
 CREATE TABLE IF NOT EXISTS departments (
     department_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    region_id INTEGER REFERENCES regions(region_id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -179,6 +191,7 @@ SELECT
     t.name AS type_name,
     t.normative_life_years,
     d.name AS department_name,
+    r.region_name,
     l.building AS location_building,
     l.floor AS location_floor,
     l.room AS location_room,
@@ -190,29 +203,122 @@ SELECT
 FROM assets a
 LEFT JOIN asset_types t ON a.asset_type_id = t.type_id
 LEFT JOIN departments d ON a.department_id = d.department_id
+LEFT JOIN regions r ON d.region_id = r.region_id
 LEFT JOIN locations l ON a.location_id = l.location_id
 LEFT JOIN users u ON a.responsible_user_id = u.user_id;
 
 -- ============================================
 -- SEED
 -- ============================================
--- Підрозділи: 24 області + АР Крим (Київська = department_id 9; там багато підрозділів)
-INSERT INTO departments (name) VALUES
-  ('Вінницька'),('Волинська'),('Дніпропетровська'),('Донецька'),('Житомирська'),
-  ('Закарпатська'),('Запорізька'),('Івано-Франківська'),('Київська'),('Кіровоградська'),
-  ('Луганська'),('Львівська'),('Миколаївська'),('Одеська'),('Полтавська'),
-  ('Рівненська'),('Сумська'),('Тернопільська'),('Харківська'),('Херсонська'),
-  ('Хмельницька'),('Черкаська'),('Чернівецька'),('Чернігівська'),('АР Крим')
+
+-- 1. ОБЛАСТІ (regions) — фіксований порядок для 6 спец-областей
+INSERT INTO regions (region_name, display_order) VALUES
+  ('Київська', 1),
+  ('Харківська', 2),
+  ('Полтавська', 3),
+  ('Рівненська', 4),
+  ('Одеська', 5),
+  ('Житомирська', 6),
+  ('Вінницька', 10),
+  ('Волинська', 11),
+  ('Дніпропетровська', 12),
+  ('Донецька', 13),
+  ('Закарпатська', 14),
+  ('Запорізька', 15),
+  ('Івано-Франківська', 16),
+  ('Кіровоградська', 17),
+  ('Луганська', 18),
+  ('Львівська', 19),
+  ('Миколаївська', 20),
+  ('Сумська', 21),
+  ('Тернопільська', 22),
+  ('Херсонська', 23),
+  ('Хмельницька', 24),
+  ('Черкаська', 25),
+  ('Чернівецька', 26),
+  ('Чернігівська', 27),
+  ('АР Крим', 28)
+ON CONFLICT DO NOTHING;
+
+-- 2. ПІДРОЗДІЛИ (departments) — з прив'язкою до regions
+
+-- 1. КИЇВСЬКА ОБЛАСТЬ (12 підрозділів: Управління + ТвУЗ + 10 тестових)
+INSERT INTO departments (name, region_id) VALUES
+  ('Київське Управління', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський ТвУЗ', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_1', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_2', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_3', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_4', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_5', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_6', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_7', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_8', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_9', (SELECT region_id FROM regions WHERE region_name = 'Київська')),
+  ('Київський Підрозділ_10', (SELECT region_id FROM regions WHERE region_name = 'Київська'))
+ON CONFLICT DO NOTHING;
+
+-- 2. ХАРКІВСЬКА ОБЛАСТЬ (2 підрозділи: Управління + ТвУЗ)
+INSERT INTO departments (name, region_id) VALUES
+  ('Харківське Управління', (SELECT region_id FROM regions WHERE region_name = 'Харківська')),
+  ('Харківський ТвУЗ', (SELECT region_id FROM regions WHERE region_name = 'Харківська'))
+ON CONFLICT DO NOTHING;
+
+-- 3. ПОЛТАВСЬКА ОБЛАСТЬ (2 підрозділи: Управління + ТвУЗ)
+INSERT INTO departments (name, region_id) VALUES
+  ('Полтавське Управління', (SELECT region_id FROM regions WHERE region_name = 'Полтавська')),
+  ('Полтавський ТвУЗ', (SELECT region_id FROM regions WHERE region_name = 'Полтавська'))
+ON CONFLICT DO NOTHING;
+
+-- 4. РІВНЕНСЬКА ОБЛАСТЬ (2 підрозділи: Управління + ТвУЗ)
+INSERT INTO departments (name, region_id) VALUES
+  ('Рівненське Управління', (SELECT region_id FROM regions WHERE region_name = 'Рівненська')),
+  ('Рівненський ТвУЗ', (SELECT region_id FROM regions WHERE region_name = 'Рівненська'))
+ON CONFLICT DO NOTHING;
+
+-- 5. ОДЕСЬКА ОБЛАСТЬ (2 підрозділи: Управління + ТвУЗ)
+INSERT INTO departments (name, region_id) VALUES
+  ('Одеське Управління', (SELECT region_id FROM regions WHERE region_name = 'Одеська')),
+  ('Одеський ТвУЗ', (SELECT region_id FROM regions WHERE region_name = 'Одеська'))
+ON CONFLICT DO NOTHING;
+
+-- 6. ЖИТОМИРСЬКА ОБЛАСТЬ (2 підрозділи: Управління + ТвУЗ)
+INSERT INTO departments (name, region_id) VALUES
+  ('Житомирське Управління', (SELECT region_id FROM regions WHERE region_name = 'Житомирська')),
+  ('Житомирський ТвУЗ', (SELECT region_id FROM regions WHERE region_name = 'Житомирська'))
+ON CONFLICT DO NOTHING;
+
+-- 7. РЕШТА ОБЛАСТЕЙ (алфавітно, по 1 підрозділу: Управління)
+INSERT INTO departments (name, region_id) VALUES
+  ('Вінницьке Управління', (SELECT region_id FROM regions WHERE region_name = 'Вінницька')),
+  ('Волинське Управління', (SELECT region_id FROM regions WHERE region_name = 'Волинська')),
+  ('Дніпропетровське Управління', (SELECT region_id FROM regions WHERE region_name = 'Дніпропетровська')),
+  ('Донецьке Управління', (SELECT region_id FROM regions WHERE region_name = 'Донецька')),
+  ('Закарпатське Управління', (SELECT region_id FROM regions WHERE region_name = 'Закарпатська')),
+  ('Запорізьке Управління', (SELECT region_id FROM regions WHERE region_name = 'Запорізька')),
+  ('Івано-Франківське Управління', (SELECT region_id FROM regions WHERE region_name = 'Івано-Франківська')),
+  ('Кіровоградське Управління', (SELECT region_id FROM regions WHERE region_name = 'Кіровоградська')),
+  ('Луганське Управління', (SELECT region_id FROM regions WHERE region_name = 'Луганська')),
+  ('Львівське Управління', (SELECT region_id FROM regions WHERE region_name = 'Львівська')),
+  ('Миколаївське Управління', (SELECT region_id FROM regions WHERE region_name = 'Миколаївська')),
+  ('Сумське Управління', (SELECT region_id FROM regions WHERE region_name = 'Сумська')),
+  ('Тернопільське Управління', (SELECT region_id FROM regions WHERE region_name = 'Тернопільська')),
+  ('Херсонське Управління', (SELECT region_id FROM regions WHERE region_name = 'Херсонська')),
+  ('Хмельницьке Управління', (SELECT region_id FROM regions WHERE region_name = 'Хмельницька')),
+  ('Черкаське Управління', (SELECT region_id FROM regions WHERE region_name = 'Черкаська')),
+  ('Чернівецьке Управління', (SELECT region_id FROM regions WHERE region_name = 'Чернівецька')),
+  ('Чернігівське Управління', (SELECT region_id FROM regions WHERE region_name = 'Чернігівська')),
+  ('АР Крим Управління', (SELECT region_id FROM regions WHERE region_name = 'АР Крим'))
 ON CONFLICT DO NOTHING;
 
 -- Користувачі всіх 5 ролей (паролі = username; plaintext для Етапу 1; bcrypt на Етапі 3)
--- київські ролі прив'язані до Київської області (department_id = 9)
+-- прив'язані до Київського Управління (department_id = 1)
 INSERT INTO users (username, password_hash, full_name, role, department_id, is_active) VALUES
     ('admin',      'admin',      'Глобальний Адміністратор', 'global_admin',      NULL, TRUE),
     ('supervisor', 'supervisor', 'Глобальний Супервізор',    'global_supervisor', NULL, TRUE),
-    ('kiev_admin', 'kiev_admin', 'Адмін Київської області',  'department_admin',  9,    TRUE),
-    ('editor',     'editor',     'Редактор Київської',       'editor',            9,    TRUE),
-    ('viewer',     'viewer',     'Переглядач Київської',     'viewer',            9,    TRUE)
+    ('kiev_admin', 'kiev_admin', 'Адмін Київського Управління', 'department_admin',  1,    TRUE),
+    ('editor',     'editor',     'Редактор Київського',       'editor',            1,    TRUE),
+    ('viewer',     'viewer',     'Переглядач Київського',     'viewer',            1,    TRUE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Види майна (нормативні строки: роки + години напрацювання)
@@ -223,9 +329,26 @@ INSERT INTO asset_types (name, description, normative_life_years, normative_hour
     ('Системний блок',   'Системний блок ПК',                               4, 40000)
 ON CONFLICT DO NOTHING;
 
--- Приміщення Київської області (department_id = 9)
-INSERT INTO locations (department_id, building, floor, room) VALUES
-    (9, 'Головна будівля', '3', '301'),
-    (9, 'Головна будівля', '3', '302'),
-    (9, 'Головна будівля', '2', NULL)
+-- ============================================
+-- БУДІВЛІ ЗА ЗАМОВЧУВАННЯМ ДЛЯ ВСІХ ПІДРОЗДІЛІВ
+-- ============================================
+
+-- Будівля "Управління" для всіх підрозділів
+INSERT INTO locations (department_id, building, floor, room)
+SELECT d.department_id, 'Управління', NULL, NULL
+FROM departments d
+ON CONFLICT DO NOTHING;
+
+-- Будівля "ТвУЗ" для підрозділів ТвУЗ в 6 спеціальних областей
+INSERT INTO locations (department_id, building, floor, room)
+SELECT d.department_id, 'ТвУЗ', NULL, NULL
+FROM departments d
+WHERE d.name LIKE '% ТвУЗ'
+ON CONFLICT DO NOTHING;
+
+-- Будівля "Будівля_підрозділу" для Київський Підрозділ_1...10
+INSERT INTO locations (department_id, building, floor, room)
+SELECT d.department_id, 'Будівля_підрозділу', NULL, NULL
+FROM departments d
+WHERE d.name LIKE 'Київський Підрозділ_%'
 ON CONFLICT DO NOTHING;

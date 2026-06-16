@@ -16,6 +16,7 @@ const actRoutes = require('./routes/acts');
 const userRoutes = require('./routes/users');
 const locationRoutes = require('./routes/locations');
 const departmentRoutes = require('./routes/departments');
+const regionRoutes = require('./routes/regions');
 const logRoutes = require('./routes/logs');
 
 // Initialize Express app
@@ -77,6 +78,7 @@ app.use('/api/acts', actRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/regions', regionRoutes);
 app.use('/api/logs', logRoutes);
 
 // Error handling middleware

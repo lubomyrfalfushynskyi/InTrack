@@ -98,7 +98,7 @@ router.put('/:id', authenticate, authorize('global_admin', 'department_admin'), 
   finally { client.release(); }
 });
 
-// PATCH /:id/toggle-active
+// PATCH /:id/toggle-active — блокування/розблокування (гард: не блокувати при активному майні)
 router.patch('/:id/toggle-active', authenticate, authorize('global_admin', 'department_admin'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -106,20 +106,26 @@ router.patch('/:id/toggle-active', authenticate, authorize('global_admin', 'depa
     if (!cur.rows.length) return res.status(404).json({ message: 'Користувача не знайдено' });
     const scope = getScope(req);
     if (!scope.all && cur.rows[0].department_id !== scope.departmentId) return res.status(403).json({ message: 'Поза вашим підрозділом' });
+    // Гард: блокування заборонене, поки є активне (несписане і непередане) майно
+    if (cur.rows[0].is_active) {
+      const ac = await db.query(
+        "SELECT COUNT(*)::int AS n FROM assets WHERE responsible_user_id = $1 AND status NOT IN ('written_off','transferred')",
+        [id]);
+      if (ac.rows[0].n > 0) {
+        return res.status(403).json({
+          message: `Неможливо заблокувати: на користувачі ${ac.rows[0].n} активних одиниць майна. Спишіть або передайте їх.`,
+          active_assets: ac.rows[0].n,
+        });
+      }
+    }
     const r = await db.query('UPDATE users SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1 RETURNING user_id, username, is_active', [id]);
     res.json(r.rows[0]);
   } catch (e) { logger.error('Toggle user error', { error: e.message }); res.status(500).json({ message: 'Помилка' }); }
 });
 
-// DELETE /:id — лише глобальний адмін
+// DELETE /:id — ВИДАЛЕННЯ ЗАБОРОНЕНО (ТЗ: користувачів не видаляємо, лише блокуємо)
 router.delete('/:id', authenticate, authorize('global_admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (parseInt(id) === req.user.user_id) return res.status(400).json({ message: 'Не можна видалити себе' });
-    const r = await db.query('DELETE FROM users WHERE user_id = $1 RETURNING user_id', [id]);
-    if (!r.rows.length) return res.status(404).json({ message: 'Користувача не знайдено' });
-    res.json({ message: 'Користувача видалено' });
-  } catch (e) { logger.error('Delete user error', { error: e.message }); res.status(500).json({ message: 'Помилка' }); }
+  res.status(403).json({ message: 'Видалення користувачів заборонено. Замість цього заблокуйте користувача (деактивація).' });
 });
 
 module.exports = router;
