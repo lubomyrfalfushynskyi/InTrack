@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Card, Space, Select, Typography, Tag, Button, message } from 'antd';
+import { Card, Space, Select, Typography, Tag, Button, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { logsAPI } from '../services/api';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 const ACTION = { create: { color: 'green', label: 'Створено' }, update: { color: 'blue', label: 'Оновлено' }, delete: { color: 'red', label: 'Видалено' } };
@@ -22,12 +23,12 @@ const LogsPage = () => {
   useEffect(() => { load(); }, [load]);
 
   const columns = [
-    { title: 'Час', dataIndex: 'timestamp', width: 160, render: (t) => dayjs(t).format('DD.MM.YYYY HH:mm') },
-    { title: 'Користувач', dataIndex: 'username', render: (t, r) => t || r.full_name || '-' },
-    { title: 'Дія', dataIndex: 'action_type', width: 110, render: (a) => { const x = ACTION[a]; return <Tag color={x && x.color}>{(x && x.label) || a}</Tag>; } },
-    { title: 'Сутність', dataIndex: 'entity', width: 130, render: (e) => { const f = ENTITIES.find(([k]) => k === e); return (f && f[1]) || e; } },
-    { title: 'ID', dataIndex: 'entity_id', width: 70 },
-    { title: 'Значення', dataIndex: 'new_values', ellipsis: true, render: (v) => v ? (typeof v === 'string' ? v : JSON.stringify(v)) : '' },
+    { title: 'Час', dataIndex: 'timestamp', key: 'timestamp', width: 160, render: (t) => dayjs(t).format('DD.MM.YYYY HH:mm') },
+    { title: 'Користувач', dataIndex: 'username', key: 'username', width: 150, render: (t, r) => t || r.full_name || '-' },
+    { title: 'Дія', dataIndex: 'action_type', key: 'action_type', width: 120, render: (a) => { const x = ACTION[a]; return <Tag color={x && x.color}>{(x && x.label) || a}</Tag>; } },
+    { title: 'Сутність', dataIndex: 'entity', key: 'entity', width: 140, render: (e) => { const f = ENTITIES.find(([k]) => k === e); return (f && f[1]) || e; } },
+    { title: 'ID', dataIndex: 'entity_id', key: 'entity_id', width: 80 },
+    { title: 'Значення', dataIndex: 'new_values', key: 'new_values', width: 300, render: (v) => v ? (typeof v === 'string' ? v : JSON.stringify(v)) : '' },
   ];
 
   return (
@@ -43,8 +44,18 @@ const LogsPage = () => {
           </Select>
           <Button icon={<ReloadOutlined />} onClick={load}>Оновити</Button>
         </Space></Card>
-        <Card><Table columns={columns} dataSource={logs} rowKey="log_id" loading={loading} size="small"
-          pagination={{ ...pagination, showSizeChanger: true, showTotal: (t) => `Всього: ${t}`, onChange: (c) => setPagination((p) => ({ ...p, current: c })) }} /></Card>
+        <Card>
+          <SmartTable
+            columns={columns}
+            dataSource={logs}
+            rowKey="log_id"
+            loading={loading}
+            size="small"
+            storageKey="logs"
+            pagination={pagination}
+            onChange={(pag) => setPagination((p) => ({ ...p, current: pag.current, pageSize: pag.pageSize }))}
+          />
+        </Card>
       </Space>
     </div>
   );

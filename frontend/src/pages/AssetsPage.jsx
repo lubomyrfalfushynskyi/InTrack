@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Table, Card, Space, Input, Button, Tag, Select, Typography, Modal, Form, InputNumber, DatePicker, message } from 'antd';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Card, Space, Input, Button, Tag, Select, Typography, Modal, Form, InputNumber, DatePicker, message } from 'antd';
 import { SearchOutlined, PlusOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { assetsAPI, actsAPI, assetTypesAPI, departmentsAPI, usersAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import InfoButton from '../components/InfoButton';
-import ResizableTitle from '../components/ResizableTitle';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -81,11 +81,11 @@ const AssetsPage = () => {
     } catch (e) { message.error(e.response?.data?.message || 'Помилка'); } finally { setSubmitting(false); }
   };
 
-  const baseColumns = [
-    { title: 'Інв. номер', dataIndex: 'inventory_number', key: 'inventory_number', width: 130, sorter: true,
+  const columns = [
+    { title: 'Інвентарний номер', dataIndex: 'inventory_number', key: 'inventory_number', width: 140, sorter: true,
       render: (t, r) => <a onClick={() => navigate(`/assets/${r.asset_id}`)}>{t}</a> },
-    { title: 'Найменування', dataIndex: 'name', key: 'name', ellipsis: true, sorter: true, defaultSortOrder: 'ascend', width: 200 },
-    { title: 'Вид', dataIndex: 'type_name', key: 'type_name', ellipsis: true, width: 180, sorter: true },
+    { title: 'Найменування', dataIndex: 'name', key: 'name', sorter: true, defaultSortOrder: 'ascend', width: 200 },
+    { title: 'Вид майна', dataIndex: 'type_name', key: 'type_name', width: 180, sorter: true },
     { title: 'К-ть', dataIndex: 'quantity', key: 'quantity', width: 60 },
     { title: 'Утримувач', key: 'resp', width: 160, sorter: true, render: (_, r) => r.responsible_full_name || r.responsible_username || '-' },
     { title: 'Підрозділ', dataIndex: 'department_name', key: 'department_name', width: 180, sorter: true },
@@ -96,27 +96,15 @@ const AssetsPage = () => {
         if (s === 'expired') return <Tag color="red">Вичерпано термін: {Math.abs(Number(r.remaining_life_years))} р.</Tag>;
         const st = STATUS[s] || STATUS.active; return <Tag color={st.color}>{st.label}</Tag>;
       } },
-    { title: 'Залишк. строк', dataIndex: 'remaining_life_years', key: 'remaining_life_years', width: 120, sorter: true,
+    { title: 'Залишковий строк', dataIndex: 'remaining_life_years', key: 'remaining_life_years', width: 130, sorter: true,
       render: (v) => v === null || v === undefined ? '—' : <span style={{ color: v < 0 ? '#cf1322' : undefined, fontWeight: v < 0 ? 600 : undefined }}>{v} р.</span> },
-    { title: 'Напрацюв. год', key: 'usage', width: 130,
+    { title: 'Напрацювання годин', key: 'usage', width: 150,
       render: (_, r) => (r.usage_hours_total && r.type_normative_hours) ? `${Number(r.usage_hours_total).toLocaleString('uk-UA')} / ${Number(r.type_normative_hours).toLocaleString('uk-UA')}` : (r.usage_hours_total ? Number(r.usage_hours_total).toLocaleString('uk-UA') : '—') },
-    { title: 'Балансова', dataIndex: 'balance_value', key: 'balance_value', width: 130, sorter: true,
+    { title: 'Балансова вартість', dataIndex: 'balance_value', key: 'balance_value', width: 140, sorter: true,
       render: (v) => v ? `${Number(v).toLocaleString('uk-UA')} ₴` : '-' },
-    { title: '', key: 'act', width: 50, fixed: 'right',
+    { title: '', key: 'act', width: 60, fixed: 'right', resizable: false,
       render: (_, r) => <Button type="text" icon={<EyeOutlined />} onClick={() => navigate(`/assets/${r.asset_id}`)} /> },
   ];
-
-  // ресайз колонок
-  const [colWidths, setColWidths] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('assets_col_widths') || 'null') || {}; } catch (e) { return {}; }
-  });
-  const onResize = (key) => (_, { size }) => {
-    setColWidths((prev) => { const next = { ...prev, [key]: size.width }; localStorage.setItem('assets_col_widths', JSON.stringify(next)); return next; });
-  };
-  const columns = useMemo(() => baseColumns.map((col) => {
-    const w = colWidths[col.key] != null ? colWidths[col.key] : col.width;
-    return { ...col, width: w, onHeaderCell: () => ({ width: w, onResize: onResize(col.key) }) };
-  }), [colWidths]);
 
   return (
     <div>
@@ -154,9 +142,12 @@ const AssetsPage = () => {
         </Card>
 
         <Card>
-          <Table
-            columns={columns} dataSource={assets} rowKey="asset_id" loading={loading}
-            components={{ header: { cell: ResizableTitle } }}
+          <SmartTable
+            columns={columns}
+            dataSource={assets}
+            rowKey="asset_id"
+            loading={loading}
+            storageKey="assets"
             rowClassName={(r) => {
               if (r.effective_status === 'expired') return 'row-expired';
               if (r.effective_status === 'written_off') return 'row-written-off';
@@ -170,8 +161,11 @@ const AssetsPage = () => {
                 setFilters((f) => ({ ...f, sort_by: sorter.field, sort_order: sorter.order === 'ascend' ? 'ASC' : 'DESC' }));
               }
             }}
-            pagination={{ ...pagination, showSizeChanger: true, showTotal: (t) => `Всього: ${t}` }}
-            size="middle" scroll={{ x: 'max-content' }}
+            pagination={pagination}
+            onRow={(r) => ({
+              onClick: () => navigate(`/assets/${r.asset_id}`),
+              style: { cursor: 'pointer' }
+            })}
           />
         </Card>
       </Space>

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Card, Space, Button, Typography, Modal, Form, Input, InputNumber, Popconfirm, message } from 'antd';
+import { Card, Space, Button, Typography, Modal, Form, Input, InputNumber, Popconfirm, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import { assetTypesAPI } from '../services/api';
 import InfoButton from '../components/InfoButton';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 
@@ -32,11 +33,11 @@ const AssetTypesPage = () => {
   const remove = async (t) => { try { await assetTypesAPI.remove(t.type_id); message.success('Видалено'); load(); } catch (e) { message.error(e.response?.data?.message || 'Помилка'); } };
 
   const columns = [
-    { title: 'Найменування', dataIndex: 'name', key: 'name' },
-    { title: 'Опис', dataIndex: 'description', key: 'description', ellipsis: true },
-    { title: 'Норматив (років)', dataIndex: 'normative_life_years', key: 'normative_life_years', width: 130 },
-    { title: 'Норматив напрацювання (год)', dataIndex: 'normative_hours', key: 'normative_hours', width: 200, render: (v) => v ? Number(v).toLocaleString('uk-UA') : '—' },
-    { title: '', key: 'act', width: 90, render: (_, r) => (<Space>
+    { title: 'Найменування', dataIndex: 'name', key: 'name', width: 200 },
+    { title: 'Опис', dataIndex: 'description', key: 'description', width: 250 },
+    { title: 'Заплановано (років)', dataIndex: 'normative_life_years', key: 'normative_life_years', width: 150 },
+    { title: 'Заплановано (годин)', dataIndex: 'normative_hours', key: 'normative_hours', width: 170, render: (v) => v ? Number(v).toLocaleString('uk-UA') : '—' },
+    { title: '', key: 'act', width: 80, fixed: 'right', resizable: false, render: (_, r) => (<Space size="small">
       <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(r)} />
       <Popconfirm title="Видалити вид?" onConfirm={() => remove(r)} okText="Так" cancelText="Ні"><Button type="text" danger icon={<DeleteOutlined />} /></Popconfirm>
     </Space>) },
@@ -57,7 +58,16 @@ const AssetTypesPage = () => {
           </Space>
         </div>
         <Card><Space><Button icon={<ReloadOutlined />} onClick={load}>Оновити</Button></Space></Card>
-        <Card><Table columns={columns} dataSource={types} rowKey="type_id" loading={loading} size="middle" /></Card>
+        <Card>
+          <SmartTable
+            columns={columns}
+            dataSource={types}
+            rowKey="type_id"
+            loading={loading}
+            storageKey="asset_types"
+            pagination={false}
+          />
+        </Card>
       </Space>
       <Modal title={mode === 'create' ? 'Новий вид майна' : 'Редагувати вид'} open={open} onCancel={() => setOpen(false)} footer={null} width={520}>
         <Form form={form} layout="vertical" onFinish={submit}>

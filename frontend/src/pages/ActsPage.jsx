@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Card, Space, Button, Tag, Select, Typography, Modal, Form, Input, InputNumber, DatePicker, message } from 'antd';
+import { Card, Space, Button, Tag, Select, Typography, Modal, Form, Input, InputNumber, DatePicker, message } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { actsAPI, assetsAPI, assetTypesAPI, departmentsAPI, locationsAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import InfoButton from '../components/InfoButton';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 const ACT_LABEL = { introduction: 'Введення', transfer: 'Передача', extension: 'Продовження', write_off: 'Списання' };
@@ -68,13 +69,13 @@ const ActsPage = () => {
   };
 
   const columns = [
-    { title: 'Номер', dataIndex: 'act_number', key: 'act_number' },
-    { title: 'Тип', dataIndex: 'act_type', key: 'act_type', width: 130, render: (t) => <Tag color={ACT_COLOR[t]}>{ACT_LABEL[t]}</Tag> },
-    { title: 'Дата акту', dataIndex: 'act_date', key: 'act_date', width: 110, render: (d) => d ? dayjs(d).format('DD.MM.YYYY') : '-' },
-    { title: 'Дата дії', dataIndex: 'action_date', key: 'action_date', width: 110, render: (d) => d ? dayjs(d).format('DD.MM.YYYY') : '-' },
-    { title: 'Майно', key: 'asset', render: (_, r) => r.inventory_number ? `${r.inventory_number} — ${r.asset_name || ''}` : '-' },
-    { title: 'Від / До', key: 'depts', render: (_, r) => [r.from_department_name, r.to_department_name].filter(Boolean).join(' → ') || '-' },
-    { title: 'Створив', dataIndex: 'created_by_username', key: 'created_by_username' },
+    { title: 'Номер акту', dataIndex: 'act_number', key: 'act_number', width: 150 },
+    { title: 'Тип акту', dataIndex: 'act_type', key: 'act_type', width: 140, render: (t) => <Tag color={ACT_COLOR[t]}>{ACT_LABEL[t]}</Tag> },
+    { title: 'Дата акту', dataIndex: 'act_date', key: 'act_date', width: 120, render: (d) => d ? dayjs(d).format('DD.MM.YYYY') : '-' },
+    { title: 'Дата дії', dataIndex: 'action_date', key: 'action_date', width: 120, render: (d) => d ? dayjs(d).format('DD.MM.YYYY') : '-' },
+    { title: 'Майно', key: 'asset', width: 250, render: (_, r) => r.inventory_number ? `${r.inventory_number} — ${r.asset_name || ''}` : '-' },
+    { title: 'Від / До', key: 'depts', width: 250, render: (_, r) => [r.from_department_name, r.to_department_name].filter(Boolean).join(' → ') || '-' },
+    { title: 'Створив', dataIndex: 'created_by_username', key: 'created_by_username', width: 150 },
   ];
 
   return (
@@ -102,8 +103,15 @@ const ActsPage = () => {
           </Space>
         </Card>
         <Card>
-          <Table columns={columns} dataSource={acts} rowKey="act_id" loading={loading} size="middle"
-            pagination={{ ...pagination, showSizeChanger: true, showTotal: (t) => `Всього: ${t}`, onChange: (c) => setPagination((p) => ({ ...p, current: c })) }} />
+          <SmartTable
+            columns={columns}
+            dataSource={acts}
+            rowKey="act_id"
+            loading={loading}
+            storageKey="acts"
+            pagination={pagination}
+            onChange={(pag) => setPagination((p) => ({ ...p, current: pag.current, pageSize: pag.pageSize }))}
+          />
         </Card>
       </Space>
 

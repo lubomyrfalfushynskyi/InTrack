@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Card, Space, Button, Tag, Select, Typography, Modal, Form, Input, message } from 'antd';
+import { Card, Space, Button, Tag, Select, Typography, Modal, Form, Input, message } from 'antd';
 import { PlusOutlined, EditOutlined, ReloadOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { usersAPI, departmentsAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 const ROLES = [
@@ -49,12 +50,12 @@ const UsersPage = () => {
   const toggle = async (u) => { try { await usersAPI.toggleActive(u.user_id); message.success(u.is_active ? 'Заблоковано' : 'Розблоковано'); load(); } catch (e) { message.error(e.response?.data?.message || 'Не вдалося'); } };
 
   const columns = [
-    { title: 'Логін', dataIndex: 'username', key: 'username' },
-    { title: 'ПІБ', dataIndex: 'full_name', key: 'full_name', ellipsis: true },
+    { title: 'Логін', dataIndex: 'username', key: 'username', width: 120 },
+    { title: 'ПІБ', dataIndex: 'full_name', key: 'full_name', width: 200 },
     { title: 'Роль', dataIndex: 'role', key: 'role', width: 180, render: (r) => { const x = roleMap[r]; return <Tag color={x && x.color}>{(x && x.label) || r}</Tag>; } },
-    { title: 'Підрозділ', dataIndex: 'department_name', key: 'department_name' },
+    { title: 'Підрозділ', dataIndex: 'department_name', key: 'department_name', width: 200 },
     { title: 'Статус', dataIndex: 'is_active', key: 'is_active', width: 110, render: (a) => <Tag color={a ? 'green' : 'red'}>{a ? 'Активний' : 'Вимкн.'}</Tag> },
-    { title: '', key: 'act', width: 100, render: (_, r) => (<Space>
+    { title: '', key: 'act', width: 80, fixed: 'right', resizable: false, render: (_, r) => (<Space size="small">
       <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(r)} />
       <Button type="text" danger={r.is_active} icon={r.is_active ? <LockOutlined /> : <UnlockOutlined />} onClick={() => toggle(r)} title={r.is_active ? 'Заблокувати' : 'Розблокувати'} />
     </Space>) },
@@ -71,8 +72,17 @@ const UsersPage = () => {
           <Select placeholder="Роль" allowClear style={{ width: 200 }} value={roleFilter} onChange={(v) => { setRoleFilter(v); setPagination((p) => ({ ...p, current: 1 })); }}>{ROLES.map((r) => <Select.Option key={r.value} value={r.value}>{r.label}</Select.Option>)}</Select>
           <Button icon={<ReloadOutlined />} onClick={load}>Оновити</Button>
         </Space></Card>
-        <Card><Table columns={columns} dataSource={users} rowKey="user_id" loading={loading} size="middle"
-          pagination={{ ...pagination, showSizeChanger: true, showTotal: (t) => `Всього: ${t}`, onChange: (c) => setPagination((p) => ({ ...p, current: c })) }} /></Card>
+        <Card>
+          <SmartTable
+            columns={columns}
+            dataSource={users}
+            rowKey="user_id"
+            loading={loading}
+            storageKey="users"
+            pagination={pagination}
+            onChange={(pag) => setPagination((p) => ({ ...p, current: pag.current, pageSize: pag.pageSize }))}
+          />
+        </Card>
       </Space>
 
       <Modal title={mode === 'create' ? 'Новий користувач' : 'Редагувати'} open={open} onCancel={() => setOpen(false)} footer={null} width={520}>

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Descriptions, Typography, Space, Button, Tag, Timeline, Spin, message, Modal, Form, Input, DatePicker, Select, Empty, Table, InputNumber } from 'antd';
+import { Card, Descriptions, Typography, Space, Button, Tag, Timeline, Spin, message, Modal, Form, Input, DatePicker, Select, Empty, InputNumber } from 'antd';
 import { ArrowLeftOutlined, SwapOutlined, ClockCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { assetsAPI, actsAPI, departmentsAPI, locationsAPI, usersAPI, usageAPI } from '../services/api';
 import InfoButton from '../components/InfoButton';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 const STATUS = { active: { color: 'green', label: 'В експлуатації' }, expired: { color: 'red', label: 'Вичерпано термін' }, transferred: { color: 'orange', label: 'Передане' }, written_off: { color: 'default', label: 'Списане' } };
@@ -129,15 +130,20 @@ const AssetDetailPage = () => {
         </Card>
 
         <Card title="Журнал напрацювання (за місяцями)" extra={<Button size="small" icon={<ClockCircleOutlined />} onClick={() => { usageForm.resetFields(); usageForm.setFieldsValue({ period_year: dayjs().year(), period_month: dayjs().month() + 1, hours: 0 }); setUsageModal(true); }}>Внести місяць</Button>}>
-          <Table size="small" rowKey="usage_id" pagination={false} dataSource={usage}
+          <SmartTable
+            size="small"
+            rowKey="usage_id"
+            pagination={false}
+            dataSource={usage}
             columns={[
-              { title: 'Рік', dataIndex: 'period_year', width: 70 },
-              { title: 'Місяць', dataIndex: 'period_month', width: 80, render: (m) => MONTHS[(m - 1)] || m },
-              { title: 'Години', dataIndex: 'hours', width: 100, render: (h) => Number(h).toLocaleString('uk-UA') },
-              { title: 'Хто вніс', key: 'who', render: (_, r) => r.entered_by_full_name || r.entered_by_username || '-' },
-              { title: 'Коли', dataIndex: 'entered_at', render: (t) => t ? dayjs(t).format('DD.MM.YYYY HH:mm') : '-' },
+              { title: 'Рік', dataIndex: 'period_year', key: 'period_year', width: 80 },
+              { title: 'Місяць', dataIndex: 'period_month', key: 'period_month', width: 100, render: (m) => MONTHS[(m - 1)] || m },
+              { title: 'Години', dataIndex: 'hours', key: 'hours', width: 120, render: (h) => Number(h).toLocaleString('uk-UA') },
+              { title: 'Хто вніс', key: 'who', width: 150, render: (_, r) => r.entered_by_full_name || r.entered_by_username || '-' },
+              { title: 'Коли внесено', dataIndex: 'entered_at', key: 'entered_at', width: 160, render: (t) => t ? dayjs(t).format('DD.MM.YYYY HH:mm') : '-' },
             ]}
-            locale={{ emptyText: 'Записів напрацювання немає' }} />
+            locale={{ emptyText: 'Записів напрацювання немає' }}
+          />
         </Card>
 
         <Card title="Хронологія актів">

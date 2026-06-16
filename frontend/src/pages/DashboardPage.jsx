@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Statistic, Typography, Space, Table, Checkbox, Dropdown, Button, Spin } from 'antd';
+import { Row, Col, Card, Statistic, Typography, Space, Checkbox, Dropdown, Button, Spin } from 'antd';
 import { InboxOutlined, CheckCircleOutlined, WarningOutlined, StopOutlined, FileTextOutlined, TeamOutlined, SettingOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { assetsAPI, actsAPI, usersAPI } from '../services/api';
 import InfoButton from '../components/InfoButton';
+import SmartTable from '../components/SmartTable';
 
 const { Title, Text } = Typography;
 
@@ -94,14 +95,20 @@ const DashboardPage = () => {
 
         {widgets.includes('expiredList') && (
           <Card title="Пора продовжити експлуатацію (прострочені)" extra={<a onClick={() => navigate('/assets')}>Усі</a>}>
-            <Table size="small" rowKey="asset_id" pagination={false} dataSource={expired.slice(0, 10)}
+            <SmartTable
+              size="small"
+              rowKey="asset_id"
+              pagination={false}
+              dataSource={expired.slice(0, 10)}
               columns={[
-                { title: 'Інв. номер', dataIndex: 'inventory_number', render: (t, r) => <a onClick={() => navigate(`/assets/${r.asset_id}`)}>{t}</a> },
-                { title: 'Найменування', dataIndex: 'name' },
-                { title: 'Підрозділ', dataIndex: 'department_name' },
-                { title: 'Залишк. строк', dataIndex: 'remaining_life_years', render: (v) => <span style={{ color: '#cf1322', fontWeight: 600 }}>{v} р.</span> },
+                { title: 'Інвентарний номер', dataIndex: 'inventory_number', key: 'inventory_number', width: 150, render: (t, r) => <a onClick={() => navigate(`/assets/${r.asset_id}`)}>{t}</a> },
+                { title: 'Найменування', dataIndex: 'name', key: 'name', width: 250 },
+                { title: 'Підрозділ', dataIndex: 'department_name', key: 'department_name', width: 200 },
+                { title: 'Залишковий строк', dataIndex: 'remaining_life_years', key: 'remaining_life_years', width: 150, render: (v) => <span style={{ color: '#cf1322', fontWeight: 600 }}>{v} р.</span> },
               ]}
-              locale={{ emptyText: 'Прострочених немає' }} />
+              locale={{ emptyText: 'Прострочених немає' }}
+              onRow={(r) => ({ onClick: () => navigate(`/assets/${r.asset_id}`), style: { cursor: 'pointer' } })}
+            />
           </Card>
         )}
       </Space>
