@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS assets (
     secondary_introduced_date DATE,
     status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active','expired','transferred','written_off')),
     responsible_user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT,
-    department_id INTEGER REFERENCES departments(department_id) ON DELETE SET NULL,
+    department_id INTEGER REFERENCES departments(department_id) ON DELETE CASCADE,
     location_id INTEGER REFERENCES locations(location_id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
